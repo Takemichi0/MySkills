@@ -159,27 +159,17 @@ Follow the CLAUDE.md git commit protocol:
      - Show PR URL for investigation
      - Use AskUserQuestion: "CI/CD checks failed. Do you want to ignore the failures and proceed with merge anyway?"
        - Options: "Yes, ignore and merge" or "No, stop and fix issues"
-     - If user says "Yes, ignore and merge": proceed to merge confirmation step
+     - If user says "Yes, ignore and merge": proceed to merge step
      - If user says "No, stop and fix issues":
        - STOP execution
        - Inform user they can fix issues and run `/end-worktree` again
 
-### 6. Confirm Merge with User
-- Display PR summary:
-  - PR title and URL
-  - Number of commits
-  - Files changed
-  - All checks passed
-- Use AskUserQuestion: "All checks have passed. Ready to merge this PR?"
-  - Options: "Yes, merge now" or "No, cancel"
-- If user says no: STOP and inform them they can merge manually later
-
-### 7. Merge Pull Request
+### 6. Merge Pull Request
 - Execute: `gh pr merge --merge` (create merge commit)
 - Verify merge was successful
 - GitHub typically auto-deletes the remote branch after merge (if configured)
 
-### 8. Stop Docker Environment
+### 7. Stop Docker Environment
 1. **Verify current location**:
    - Confirm we're still in the worktree directory
    - `pwd` to check current path
@@ -194,7 +184,7 @@ Follow the CLAUDE.md git commit protocol:
 3. **Verify cleanup**:
    - `docker compose -p "$PROJECT_NAME" ps` to confirm no containers are running for this worktree
 
-### 9. Clean Up Remote Resources
+### 8. Clean Up Remote Resources
 These operations can be executed from any directory, so they are safe to run while still in the worktree.
 
 1. **Verify remote branch deletion**:
@@ -205,7 +195,7 @@ These operations can be executed from any directory, so they are safe to run whi
 2. **Clean up remote tracking references**:
    - `git fetch --prune` to remove stale remote-tracking branches
 
-### 10. Prepare Cleanup Information
+### 9. Prepare Cleanup Information
 Gather the necessary information for the user to complete cleanup manually.
 
 1. **Get original directory path**:
@@ -218,7 +208,7 @@ Gather the necessary information for the user to complete cleanup manually.
 3. **Get current branch name**:
    - `git branch --show-current`
 
-### 11. Final Summary and User Instructions
+### 10. Final Summary and User Instructions
 Display a summary of completed actions and provide clear instructions for the remaining cleanup steps.
 
 **Summary of completed actions**:
@@ -252,7 +242,6 @@ git branch -d <branch-name>
   - This is NOT always main - it depends on where the worktree was created from
 - All changes must be committed before the command completes
 - CI/CD checks must pass before merging (or user can choose to ignore failures)
-- User confirmation is required before merge
 - Docker containers are stopped before cleanup (assumes Docker environment was started with `/start-worktree`)
 - Remote branch is deleted automatically by GitHub after merge (or manually if needed)
 - **Worktree and local branch cleanup requires manual user action** after the skill completes
@@ -321,9 +310,6 @@ PR created: https://github.com/user/my-app/pull/45
 
 [Monitor CI/CD checks...]
 All checks passed: ✓ lint, ✓ test, ✓ build
-
-Ask: "All checks have passed. Ready to merge this PR?"
-User answers: "Yes, merge now"
 
 [Execute: gh pr merge --merge]
 PR #45 merged successfully (merged into feature/user-profile)
