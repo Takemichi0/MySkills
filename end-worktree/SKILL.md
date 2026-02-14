@@ -129,40 +129,44 @@ Follow the CLAUDE.md git commit protocol:
 ### 5. Monitor CI/CD Checks
 1. **Get PR number**: Extract from PR URL or use `gh pr view --json number`
 
-2. **Fetch and analyze Gemini review** (if available):
-   - Wait 10-15 seconds for Gemini bot to post review
-   - Fetch comments: `gh api repos/:owner/:repo/pulls/<pr-number>/comments --jq '.[] | "\(.user.login): \(.body)"'`
-   - Fetch reviews: `gh api repos/:owner/:repo/pulls/<pr-number>/reviews --jq '.[] | "\(.user.login) (\(.state)): \(.body)"'`
-   - Filter for Gemini bot (username contains "gemini")
-   - For each Gemini suggestion:
-     - Read mentioned files to understand context
-     - Verify suggestion validity (check against project dependencies, actual code)
-     - Categorize: HIGH (bugs/security), MEDIUM (quality), LOW (style)
-     - Determine if suggestion improves code
-   - Automatically apply valid fixes:
-     - Use Edit tool to apply changes
-     - Stage: `git add <modified-files>`
-     - Commit: `git commit -m "address Gemini review feedback\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"`
-     - Push: `git push`
-     - Display summary with reasoning
-   - If no valid suggestions, display why and continue
-
-3. **Monitor CI/CD checks**:
+2. **Monitor CI/CD checks**:
    - Use `gh pr checks` to get current check status
    - Wait for all checks to complete
    - Poll every 10-30 seconds until done
 
-4. **Check results**:
-   - If all checks pass: proceed to merge
+3. **Check CI results**:
+   - If all checks pass: proceed to Gemini review check
    - If any checks fail:
      - Display failed check names and details
      - Show PR URL for investigation
      - Use AskUserQuestion: "CI/CD checks failed. Do you want to ignore the failures and proceed with merge anyway?"
        - Options: "Yes, ignore and merge" or "No, stop and fix issues"
-     - If user says "Yes, ignore and merge": proceed to merge step
+     - If user says "Yes, ignore and merge": proceed to Gemini review check
      - If user says "No, stop and fix issues":
        - STOP execution
        - Inform user they can fix issues and run `/end-worktree` again
+
+4. **Fetch and analyze Gemini review** (mandatory):
+   - By this point, sufficient time has passed for Gemini bot to analyze the PR
+   - Fetch comments: `gh api repos/:owner/:repo/pulls/<pr-number>/comments --jq '.[] | "\(.user.login): \(.body)"'`
+   - Fetch reviews: `gh api repos/:owner/:repo/pulls/<pr-number>/reviews --jq '.[] | "\(.user.login) (\(.state)): \(.body)"'`
+   - Filter for Gemini bot (username contains "gemini")
+   - If Gemini review found:
+     - For each Gemini suggestion:
+       - Read mentioned files to understand context
+       - Verify suggestion validity (check against project dependencies, actual code)
+       - Categorize: HIGH (bugs/security), MEDIUM (quality), LOW (style)
+       - Determine if suggestion improves code
+     - Automatically apply valid fixes:
+       - Use Edit tool to apply changes
+       - Stage: `git add <modified-files>`
+       - Commit: `git commit -m "address Gemini review feedback\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"`
+       - Push: `git push`
+       - Display summary with reasoning
+   - If no Gemini review found:
+     - Report: "No Gemini review found for this PR"
+     - Continue to merge step
+   - This step is always executed, even if no review is found
 
 ### 6. Merge Pull Request
 - Execute: `gh pr merge --merge` (create merge commit)
