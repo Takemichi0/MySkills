@@ -80,7 +80,9 @@ Follow the CLAUDE.md git commit protocol:
    - Add co-authored-by line
 
 2. **Commit changes**:
-   - Stage changes: `git add .` (this includes TODO.md if it was updated)
+   - Commit per file as a general rule. Stage and commit each file individually to keep git history granular and easy to revert.
+   - If multiple files are tightly coupled and form a single logical change, they can be committed together.
+   - Stage changes: `git add <file>` (per file, not `git add .`)
    - Commit with message using HEREDOC:
      ```bash
      git commit -m "$(cat <<'EOF'
